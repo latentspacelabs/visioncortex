@@ -1,5 +1,6 @@
 use std::fmt;
 use std::fmt::Write;
+use std::collections::HashSet;
 
 pub use bit_vec::BitVec;
 
@@ -45,6 +46,7 @@ pub struct SegImage {
     pub pixels: Vec<SegId>,
     pub width: usize,
     pub height: usize,
+    pub unique_ids: Vec<SegId>,
 }
 
 pub type SegId = u8;
@@ -353,15 +355,15 @@ impl ColorImage {
     }
 
 
-    pub fn to_seg_image(&self) -> SegImage {
-        let mut image = SegImage::new_w_h(self.width, self.height);
-        for y in 0..self.height {
-            for x in 0..self.width {
-                image.set_pixel(x, y, &self.get_pixel(x, y).a);
-            }
-        }
-        image
-    }
+    // pub fn to_seg_image(&self) -> SegImage {
+    //     let mut image = SegImage::new_w_h(self.width, self.height);
+    //     for y in 0..self.height {
+    //         for x in 0..self.width {
+    //             image.set_pixel(x, y, &self.get_pixel(x, y).a);
+    //         }
+    //     }
+    //     image
+    // }
 
     pub fn sample_pixel_at(&self, p: PointF32) -> Color {
         bilinear_interpolate(self, p)
@@ -378,11 +380,22 @@ impl SegImage {
         Default::default()
     }
 
+    pub fn new_pixels(pixels: Vec<SegId>, width: usize, height: usize) -> Self {
+        let unique_ids: Vec<SegId> = pixels.into_iter().collect::<HashSet<_>>().into_iter().collect();
+        Self {
+            pixels: vec![0; width * height],
+            width,
+            height,
+            unique_ids,
+        }
+    }
+
     pub fn new_w_h(width: usize, height: usize) -> Self {
         Self {
             pixels: vec![0; width * height],
             width,
             height,
+            unique_ids: Vec::new(),
         }
     }
 
@@ -400,15 +413,13 @@ impl SegImage {
     }
 
     pub fn get_pixel_at(&self, index: usize) -> SegId {
-        let index = index * 4;
-        let a: SegId = self.pixels[index + 3];
-        a
+        self.pixels[index]
     }
 
-    pub fn set_pixel(&mut self, x: usize, y: usize, seg_id: &SegId) {
-        // let index = y * self.width + x;
-        // self.set_seg_pixel_at(index, color);
-    }
+    // pub fn set_pixel(&mut self, x: usize, y: usize, seg_id: &SegId) {
+    //     let index = y * self.width + x;
+    //     self.set_seg_pixel_at(index, );
+    // }
 
     // pub fn set_seg_pixel_at(&mut self, index: usize, color: &Color) {
     //     let index = index * 4;

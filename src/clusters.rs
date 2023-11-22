@@ -1,6 +1,6 @@
 //! Algorithm to cluster a binary image
 
-use crate::{BinaryImage, BoundingRect, CompoundPath, MonoImage, MonoImageItem, PathI32, PathSimplifyMode, PointI32, Shape, Spline};
+use crate::{BinaryImage, BoundingRect, CompoundPath, MonoImage, MonoImageItem, PathI32, PathSimplifyMode, PointI32, Shape, Spline, SegImage, SegId};
 
 /// A cluster of binary image pixels
 #[derive(Default)]
@@ -347,6 +347,27 @@ impl BinaryImage {
         Clusters { clusters, rect }
     }
 }
+
+impl SegImage {
+    pub fn to_clusters(&self) -> Clusters {
+        let mut clusters: Vec<Cluster> = self.unique_ids
+            .iter()
+            .map(|&_id| Cluster::default())
+            .collect();
+        let mut rect = BoundingRect::default();
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let pos = PointI32 { x: x as i32, y: y as i32 };
+                clusters[self.get_pixel(x as usize, y as usize) as usize].add(pos);
+                rect.add_x_y(x as i32, y as i32);
+            }
+        }
+
+        Clusters { clusters, rect }
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
