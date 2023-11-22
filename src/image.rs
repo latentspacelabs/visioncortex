@@ -39,6 +39,23 @@ pub struct ColorImageIter<'a> {
     stop: usize,
 }
 
+#[derive(Clone, Default)]
+
+pub struct SegImage {
+    pub pixels: Vec<SegId>,
+    pub width: usize,
+    pub height: usize,
+}
+
+pub type SegId = u8;
+
+/// Iterate over each pixel of ColorImage
+pub struct SegImageIter<'a> {
+    im: &'a SegImage,
+    curr: usize,
+    stop: usize,
+}
+
 impl BinaryImage {
     pub fn new_w_h(width: usize, height: usize) -> BinaryImage {
         BinaryImage {
@@ -335,6 +352,17 @@ impl ColorImage {
         image
     }
 
+
+    pub fn to_seg_image(&self) -> SegImage {
+        let mut image = SegImage::new_w_h(self.width, self.height);
+        for y in 0..self.height {
+            for x in 0..self.width {
+                image.set_pixel(x, y, &self.get_pixel(x, y).a);
+            }
+        }
+        image
+    }
+
     pub fn sample_pixel_at(&self, p: PointF32) -> Color {
         bilinear_interpolate(self, p)
     }
@@ -342,6 +370,54 @@ impl ColorImage {
     pub fn sample_pixel_at_safe(&self, p:PointF32) -> Option<Color> {
         bilinear_interpolate_safe(self, p)
     }
+}
+
+impl SegImage {
+
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn new_w_h(width: usize, height: usize) -> Self {
+        Self {
+            pixels: vec![0; width * height],
+            width,
+            height,
+        }
+    }
+
+    pub fn iter(&self) -> SegImageIter {
+        SegImageIter {
+            im: self,
+            curr: 0,
+            stop: self.width * self.height,
+        }
+    }
+
+    pub fn get_pixel(&self, x: usize, y: usize) -> SegId {
+        let index = y * self.width + x;
+        self.get_pixel_at(index)
+    }
+
+    pub fn get_pixel_at(&self, index: usize) -> SegId {
+        let index = index * 4;
+        let a: SegId = self.pixels[index + 3];
+        a
+    }
+
+    pub fn set_pixel(&mut self, x: usize, y: usize, seg_id: &SegId) {
+        // let index = y * self.width + x;
+        // self.set_seg_pixel_at(index, color);
+    }
+
+    // pub fn set_seg_pixel_at(&mut self, index: usize, color: &Color) {
+    //     let index = index * 4;
+    //     self.pixels[index] = color.r;
+    //     self.pixels[index + 1] = color.g;
+    //     self.pixels[index + 2] = color.b;
+    //     self.pixels[index + 3] = color.a;
+    // }
+
 }
 
 pub fn bilinear_interpolate_safe(im: &ColorImage, p: PointF32) -> Option<Color> {
