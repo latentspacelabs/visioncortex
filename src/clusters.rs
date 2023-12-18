@@ -67,15 +67,13 @@ impl Cluster {
             x: self.rect.left,
             y: self.rect.top,
         };
-        Self::image_to_compound_path(
-            &origin,
-            &self.to_binary_image(),
-            mode,
-            corner_threshold,
-            segment_length,
-            max_iterations,
-            splice_threshold
-        )
+        let mut spline = Spline::from_image(
+            &self.to_binary_image(), true, corner_threshold, Self::OUTSET_RATIO, segment_length, max_iterations, splice_threshold
+        );
+        let mut group = CompoundPath::new();
+        spline.offset(&origin.to_point_f64());
+        group.add_spline(spline);
+        group
     }
 
     pub fn image_to_compound_path(
@@ -145,25 +143,22 @@ impl Cluster {
 
     pub fn image_to_splines(image: &BinaryImage, corner_threshold: f64, segment_length: f64, max_iterations:usize, splice_threshold: f64) -> Vec<Spline> {
         let mut boundaries = vec![(image.clone(), PointI32 { x: 0, y: 0 })];
-        let holes = image.negative().to_clusters(false);
-        for hole in holes.iter() {
-            if  hole.rect.left as usize == 0 ||
-                hole.rect.top as usize == 0 ||
-                hole.rect.right as usize == image.width ||
-                hole.rect.bottom as usize == image.height {
-                continue;
-            }
-            for p in hole.points.iter() {
+        let clusters = image.to_clusters(false);
+        println!("clusters: {}", clusters.len());
+        for cluster in clusters.iter() {
+            for p in cluster.points.iter() {
                 boundaries[0].0.set_pixel(p.x as usize, p.y as usize, true);
             }
             boundaries.push((
-                hole.to_binary_image(),
+                cluster.to_binary_image(),
                 PointI32 {
-                    x: hole.rect.left,
-                    y: hole.rect.top,
+                    x: cluster.rect.left,
+                    y: cluster.rect.top,
                 },
             ));
         }
+
+        println!("boundaries: {}", boundaries.len());
         let mut splines = vec![];
         for (i, (image, offset)) in boundaries.iter_mut().enumerate() {
             let mut spline = Spline::from_image(
