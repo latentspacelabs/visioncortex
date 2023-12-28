@@ -127,23 +127,28 @@ impl Spline {
         }
 
         println!("Before simplicifation, spline has num points: {}", result.points.len());
-        let opt = bezier::Curve::fit_from_points(&result.points, max_error_simp );
 
-        match opt {
-            Some(curves) => {
-                let mut result_simp = Self::new(curves[0].start_point);
-                for curve in curves {
-                    let p4 = curve.end_point;
-                    let (p2, p3) = curve.control_points;
-                    result_simp.add(p2, p3, p4);
+        if max_error_simp > 0.0 {
+            result
+        } else {
+            let opt = bezier::Curve::fit_from_points(&result.points, max_error_simp );
+            match opt {
+                Some(curves) => {
+                    let mut result_simp = Self::new(curves[0].start_point);
+                    for curve in curves {
+                        let p4 = curve.end_point;
+                        let (p2, p3) = curve.control_points;
+                        result_simp.add(p2, p3, p4);
+                    }
+                    println!("After simplicifation, spline has num points: {}", result_simp.points.len());
+                    result_simp
+                },
+                None => {
+                    result
                 }
-                println!("After simplicifation, spline has num points: {}", result_simp.points.len());
-                result_simp
-            },
-            None => {
-                result
             }
         }
+
     }
 
     /// Converts spline to svg path. Panic if the length of spline is not valid (not 1+3n for some integer n)
