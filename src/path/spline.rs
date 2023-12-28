@@ -1,6 +1,7 @@
 use std::{cmp::Ordering, convert::TryInto};
 use crate::{BinaryImage, PathF64, PointF64, PathSimplifyMode};
 use super::{PathI32, smooth::SubdivideSmooth};
+use flo_curves::{Coord2, bezier, BezierCurveFactory};
 
 #[derive(Debug, Default, Clone)]
 /// Series of connecting 2D Bezier Curves
@@ -125,7 +126,24 @@ impl Spline {
             result.add(bezier_points[1], bezier_points[2], bezier_points[3]);
         }
 
-        result
+        println!("Before simplicifation, spline has num points: {}", result.points.len());
+        let opt = bezier::Curve::fit_from_points(&result.points, 10.0);
+
+        match opt {
+            Some(curves) => {
+                let mut result_simp = Self::new(curves[0].start_point);
+                for curve in curves {
+                    let p4 = curve.end_point;
+                    let (p2, p3) = curve.control_points;
+                    result_simp.add(p2, p3, p4);
+                }
+                println!("After simplicifation, spline has num points: {}", result_simp.points.len());
+                result_simp
+            },
+            None => {
+                result
+            }
+        }
     }
 
     /// Converts spline to svg path. Panic if the length of spline is not valid (not 1+3n for some integer n)
