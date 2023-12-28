@@ -128,7 +128,7 @@ impl Spline {
 
         println!("Before simplicifation, spline has num points: {}", result.points.len());
 
-        if max_error_simp > 0.0 {
+        if max_error_simp <= 0.0 {
             result
         } else {
             let opt = bezier::Curve::fit_from_points(&result.points, max_error_simp );
