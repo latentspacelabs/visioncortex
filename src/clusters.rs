@@ -61,14 +61,15 @@ impl Cluster {
         corner_threshold: f64,
         segment_length: f64,
         max_iterations: usize,
-        splice_threshold: f64
+        splice_threshold: f64,
+        max_error_simp: f64
     ) -> CompoundPath {
         let origin = PointI32 {
             x: self.rect.left,
             y: self.rect.top,
         };
         let mut spline = Spline::from_image(
-            &self.to_binary_image(), true, corner_threshold, Self::OUTSET_RATIO, segment_length, max_iterations, splice_threshold
+            &self.to_binary_image(), true, corner_threshold, Self::OUTSET_RATIO, segment_length, max_iterations, splice_threshold, max_error_simp
         );
         let mut group = CompoundPath::new();
         spline.offset(&origin.to_point_f64());
@@ -83,7 +84,8 @@ impl Cluster {
         corner_threshold: f64,
         segment_length: f64,
         max_iterations: usize,
-        splice_threshold: f64
+        splice_threshold: f64,
+        max_error_simp: f64
     ) -> CompoundPath {
         match mode {
             PathSimplifyMode::None | PathSimplifyMode::Polygon => {
@@ -96,7 +98,7 @@ impl Cluster {
                 group
             },
             PathSimplifyMode::Spline => {
-                let splines = Self::image_to_splines(image, corner_threshold, segment_length, max_iterations, splice_threshold);
+                let splines = Self::image_to_splines(image, corner_threshold, segment_length, max_iterations, splice_threshold, max_error_simp);
                 let mut group = CompoundPath::new();
                 for mut spline in splines.into_iter() {
                     spline.offset(&offset.to_point_f64());
@@ -141,7 +143,7 @@ impl Cluster {
 
     const OUTSET_RATIO: f64 = 8.0;
 
-    pub fn image_to_splines(image: &BinaryImage, corner_threshold: f64, segment_length: f64, max_iterations:usize, splice_threshold: f64) -> Vec<Spline> {
+    pub fn image_to_splines(image: &BinaryImage, corner_threshold: f64, segment_length: f64, max_iterations:usize, splice_threshold: f64, max_error_simp: f64) -> Vec<Spline> {
         let mut boundaries = vec![(image.clone(), PointI32 { x: 0, y: 0 })];
         let clusters = image.to_clusters(false);
         println!("clusters: {}", clusters.len());
@@ -162,7 +164,7 @@ impl Cluster {
         let mut splines = vec![];
         for (i, (image, offset)) in boundaries.iter_mut().enumerate() {
             let mut spline = Spline::from_image(
-                image, i == 0, corner_threshold, Self::OUTSET_RATIO, segment_length, max_iterations, splice_threshold
+                image, i == 0, corner_threshold, Self::OUTSET_RATIO, segment_length, max_iterations, splice_threshold, max_error_simp
             );
             spline.offset(&offset.to_point_f64());
             if !spline.is_empty() {

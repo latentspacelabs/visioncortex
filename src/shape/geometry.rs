@@ -163,7 +163,8 @@ impl Shape {
             0.0,
             0.0,
             0,
-            0.0
+            0.0,
+            0.0,
         );
         paths.paths.truncate(1);
         let paths = paths.reduce(std::cmp::min(self.image.width, self.image.height) as f64);

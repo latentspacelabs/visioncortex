@@ -70,17 +70,17 @@ impl Spline {
     /// Length threshold is specified in pixels (length unit in path coordinate system).
     pub fn from_image(
         image: &BinaryImage, clockwise: bool, corner_threshold: f64, outset_ratio: f64,
-        segment_length: f64, max_iterations: usize, splice_threshold: f64
+        segment_length: f64, max_iterations: usize, splice_threshold: f64, max_error_simp: f64
     ) -> Self {
         let path = PathI32::image_to_path(image, clockwise, PathSimplifyMode::Polygon);
         let path = path.smooth(corner_threshold, outset_ratio, segment_length, max_iterations);
-        Self::from_path_f64(&path, splice_threshold)
+        Self::from_path_f64(&path, splice_threshold, max_error_simp)
     }
 
     /// Returns a spline by curve-fitting a path.
     /// 
     /// Splice threshold is specified in radians.
-    pub fn from_path_f64(path: &PathF64, splice_threshold: f64) -> Self {
+    pub fn from_path_f64(path: &PathF64, splice_threshold: f64, max_error_simp: f64) -> Self {
         // First locate all the splice points
         let splice_points = SubdivideSmooth::find_splice_points(&path, splice_threshold);
         let path = &path.path[0..path.len()-1];
@@ -127,7 +127,7 @@ impl Spline {
         }
 
         println!("Before simplicifation, spline has num points: {}", result.points.len());
-        let opt = bezier::Curve::fit_from_points(&result.points, 10.0);
+        let opt = bezier::Curve::fit_from_points(&result.points, max_error_simp );
 
         match opt {
             Some(curves) => {
