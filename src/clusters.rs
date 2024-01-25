@@ -41,6 +41,7 @@ impl Cluster {
                 true,
             );
         }
+        image = image.fix_diagonal_cc();
         image
     }
 
@@ -146,7 +147,7 @@ impl Cluster {
     pub fn image_to_splines(image: &BinaryImage, corner_threshold: f64, segment_length: f64, max_iterations:usize, splice_threshold: f64, max_error_simp: f64) -> Vec<Spline> {
         let mut boundaries = vec![(image.clone(), PointI32 { x: 0, y: 0 })];
         let clusters = image.to_clusters(false);
-        println!("clusters: {}", clusters.len());
+        // println!("clusters: {}", clusters.len());
         for cluster in clusters.iter() {
             for p in cluster.points.iter() {
                 boundaries[0].0.set_pixel(p.x as usize, p.y as usize, true);
@@ -160,7 +161,7 @@ impl Cluster {
             ));
         }
 
-        println!("boundaries: {}", boundaries.len());
+        // println!("boundaries: {}", boundaries.len());
         let mut splines = vec![];
         for (i, (image, offset)) in boundaries.iter_mut().enumerate() {
             let mut spline = Spline::from_image(

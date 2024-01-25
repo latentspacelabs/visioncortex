@@ -118,6 +118,76 @@ impl BinaryImage {
         }
         new_image
     }
+
+    pub fn dilate(&self) -> BinaryImage {
+        let mut result = BinaryImage::new_w_h(self.width, self.height);
+
+        for y in 0..self.height {
+            for x in 0..self.width {
+                if self.get_pixel(x, y) {
+                    // Set the current pixel
+                    result.set_pixel(x, y, true);
+
+                    // Set neighboring pixels (8-connected)
+                    for i in -1..=1 {
+                        for j in -1..=1 {
+                            let nx = x as isize + i;
+                            let ny = y as isize + j;
+                            if nx >= 0 && ny >= 0 && nx < self.width as isize && ny < self.height as isize {
+                                result.set_pixel(nx as usize, ny as usize, true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        result
+    }
+
+    pub fn fix_diagonal_cc(&self) -> BinaryImage {
+        let mut to_add = Vec::new();
+
+        for y in 1..self.height - 1 {
+            for x in 1..self.width - 1 {
+                if self.get_pixel(x, y) {
+                    // Check diagonal slots
+                    if self.get_pixel(x - 1, y - 1) && !self.get_pixel(x - 1, y) && !self.get_pixel(x, y - 1) {
+                        to_add.push((y - 1) * self.width + x);
+                    }
+
+                    if self.get_pixel(x + 1, y - 1) && !self.get_pixel(x + 1, y) && !self.get_pixel(x, y - 1) {
+                        to_add.push((y - 1) * self.width + x);
+                    }
+
+                    if self.get_pixel(x - 1, y + 1) && !self.get_pixel(x - 1, y) && !self.get_pixel(x, y + 1) {
+                        to_add.push((y + 1) * self.width + x);
+                    }
+
+                    if self.get_pixel(x + 1, y + 1) && !self.get_pixel(x + 1, y) && !self.get_pixel(x, y + 1) {
+                        to_add.push((y + 1) * self.width + x);
+                    }
+                }
+            }
+        }
+
+        let mut result = self.clone();
+
+        if to_add.len() > 0 {
+            println!("Filling in {} diagonal cc slots in segment", to_add.len());
+        }
+
+        // Add pixels in the diagonal slots
+        for index in to_add {
+            let x = index % self.width;
+            let y = index / self.width;
+            result.set_pixel(x, y, true);
+        }
+
+
+        return result
+    }
+
 }
 
 #[cfg(test)]

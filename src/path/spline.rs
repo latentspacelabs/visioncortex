@@ -72,7 +72,11 @@ impl Spline {
         image: &BinaryImage, clockwise: bool, corner_threshold: f64, outset_ratio: f64,
         segment_length: f64, max_iterations: usize, splice_threshold: f64, max_error_simp: f64
     ) -> Self {
-        let path = PathI32::image_to_path(image, clockwise, PathSimplifyMode::Polygon);
+        // let sum = image.pixels.iter().filter(|x| *x).count();
+        // println!("Before dilation, image has num pixels: {}", sum);
+        // let dilated_sum = dilated_image.pixels.iter().filter(|x| *x).count();
+        // println!("After dilation, image has num pixels: {}", dilated_sum);
+        let path = PathI32::image_to_path(&image, clockwise, PathSimplifyMode::Polygon);
         let path = path.smooth(corner_threshold, outset_ratio, segment_length, max_iterations);
         Self::from_path_f64(&path, splice_threshold, max_error_simp)
     }
@@ -126,7 +130,7 @@ impl Spline {
             result.add(bezier_points[1], bezier_points[2], bezier_points[3]);
         }
 
-        println!("Before simplicifation, spline has num points: {}", result.points.len());
+        // println!("Before simplicifation, spline has num points: {}", result.points.len());
 
         if max_error_simp <= 0.0 {
             result
@@ -140,7 +144,7 @@ impl Spline {
                         let (p2, p3) = curve.control_points;
                         result_simp.add(p2, p3, p4);
                     }
-                    println!("After simplicifation, spline has num points: {}", result_simp.points.len());
+                    // println!("After simplicifation, spline has num points: {}", result_simp.points.len());
                     result_simp
                 },
                 None => {
