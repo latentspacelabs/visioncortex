@@ -382,8 +382,6 @@ impl SegImage {
 
     pub fn new_pixels(pixels: Vec<SegId>, width: usize, height: usize) -> Self {
         let mut unique_ids_set: HashSet<SegId> = pixels.clone().into_iter().collect::<HashSet<_>>();
-        unique_ids_set.take(&0);
-        
         let unique_ids: Vec<SegId> = unique_ids_set.into_iter().collect();
         // println!("unique_ids: {:?}", unique_ids);
         // println!("height: {}, width: {}", height, width);
