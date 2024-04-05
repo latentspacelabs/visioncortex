@@ -357,7 +357,12 @@ impl SegImage {
         for y in 0..self.height {
             for x in 0..self.width {
                 let pos = PointI32 { x: x as i32, y: y as i32 };
-                clusters[self.get_pixel(x as usize, y as usize) as usize].add(pos);
+                let seg_id= self.get_pixel(x as usize, y as usize) as usize;
+                if seg_id == 0 {
+                    continue;
+                } else {
+                    clusters[seg_id - 1].add(pos);
+                }
                 rect.add_x_y(x as i32, y as i32);
             }
         }

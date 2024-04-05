@@ -49,7 +49,7 @@ pub struct SegImage {
     pub unique_ids: Vec<SegId>,
 }
 
-pub type SegId = u8;
+pub type SegId = u32;
 
 /// Iterate over each pixel of ColorImage
 pub struct SegImageIter<'a> {
@@ -381,9 +381,15 @@ impl SegImage {
     }
 
     pub fn new_pixels(pixels: Vec<SegId>, width: usize, height: usize) -> Self {
-        let unique_ids: Vec<SegId> = pixels.clone().into_iter().collect::<HashSet<_>>().into_iter().collect();
+        let mut unique_ids_set: HashSet<SegId> = pixels.clone().into_iter().collect::<HashSet<_>>();
+        unique_ids_set.take(&0);
+        
+        let unique_ids: Vec<SegId> = unique_ids_set.into_iter().collect();
         // println!("unique_ids: {:?}", unique_ids);
         // println!("height: {}, width: {}", height, width);
+
+        // drop 0 (null seg)
+
         Self {
             pixels,
             width,

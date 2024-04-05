@@ -173,9 +173,9 @@ impl BinaryImage {
 
         let mut result = self.clone();
 
-        if to_add.len() > 0 {
-            println!("Filling in {} diagonal cc slots in segment", to_add.len());
-        }
+        // if to_add.len() > 0 {
+        //     println!("Filling in {} diagonal cc slots in segment", to_add.len());
+        // }
 
         // Add pixels in the diagonal slots
         for index in to_add {
