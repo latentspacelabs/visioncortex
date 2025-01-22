@@ -69,9 +69,28 @@ impl Cluster {
             x: self.rect.left,
             y: self.rect.top,
         };
+        let binary_image = self.to_binary_image();
+        // let mut scale = 1.0;
+
+        // let binary_image = if binary_image.width > 500 || binary_image.height > 500 {
+        //     scale = 500.0 / binary_image.width.max(binary_image.height) as f64;
+        //     let resized = binary_image.resize(
+        //         (binary_image.width as f64 * scale) as usize,
+        //         (binary_image.height as f64 * scale) as usize
+        //     );
+        //     println!("resized from {} pixels to {} pixels", binary_image.area(), resized.area());
+        //     resized 
+        // } else {
+        //     binary_image
+        // };
+
         let mut spline = Spline::from_image(
-            &self.to_binary_image(), true, corner_threshold, Self::OUTSET_RATIO, segment_length, max_iterations, splice_threshold, max_error_simp
+            &binary_image, true, corner_threshold, Self::OUTSET_RATIO, segment_length, max_iterations, splice_threshold, max_error_simp
         );
+        // if scale != 1.0 {
+        //     println!("scaling spline by {}", 1.0 / scale);
+        //     spline.scale(1.0 / scale);
+        // }
         let mut group = CompoundPath::new();
         spline.offset(&origin.to_point_f64());
         group.add_spline(spline);

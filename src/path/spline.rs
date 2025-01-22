@@ -46,6 +46,13 @@ impl Spline {
         if !self.points.is_empty() {(self.points.len()-1)/3} else {0}
     }
 
+    pub fn scale(&mut self, scale: f64) {
+        for point in self.points.iter_mut() {
+            point.x *= scale;
+            point.y *= scale;
+        }
+    }
+
     /// Returns true if the spline contains no curve, false otherwise
     /// A curve is defined by 4 points, so a non-empty spline should contain at least 4 points.
     pub fn is_empty(&self) -> bool {

@@ -236,6 +236,24 @@ impl BinaryImage {
         }
         image
     }
+
+    /// Resize the binary image using nearest neighbor sampling
+    pub fn resize(&self, new_width: usize, new_height: usize) -> BinaryImage {
+        let mut resized = BinaryImage::new_w_h(self.width, self.height);
+        
+        let x_ratio = self.width as f64 / new_width as f64;
+        let y_ratio = self.height as f64 / new_height as f64;
+
+        for y in 0..new_height {
+            for x in 0..new_width {
+                let px = (x as f64 * x_ratio).floor() as usize;
+                let py = (y as f64 * y_ratio).floor() as usize;
+                resized.set_pixel(x, y, self.get_pixel(px, py));
+            }
+        }
+        
+        resized
+    }
 }
 
 impl fmt::Display for BinaryImage {
