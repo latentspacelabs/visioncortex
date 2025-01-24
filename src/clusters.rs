@@ -42,6 +42,8 @@ impl Cluster {
             );
         }
         image = image.fix_diagonal_cc();
+        image = image.remove_disjoint_components();
+        
         image
     }
 
