@@ -164,17 +164,15 @@ impl BinaryImage {
                         visited[idx] = true;
                         component.push((cx, cy));
                         
-                        // Check 8-connected neighbors
-                        for dy in -1..=1 {
-                            for dx in -1..=1 {
-                                let nx = cx as i32 + dx;
-                                let ny = cy as i32 + dy;
-                                if nx >= 0 && ny >= 0 && nx < self.width as i32 && ny < self.height as i32 {
-                                    let nx = nx as usize;
-                                    let ny = ny as usize;
-                                    if self.get_pixel(nx, ny) && !visited[ny * self.width + nx] {
-                                        stack.push((nx, ny));
-                                    }
+                        // Check 4-connected neighbors only (no diagonals)
+                        for (dx, dy) in [(0, 1), (1, 0), (0, -1), (-1, 0)] {
+                            let nx = cx as i32 + dx;
+                            let ny = cy as i32 + dy;
+                            if nx >= 0 && ny >= 0 && nx < self.width as i32 && ny < self.height as i32 {
+                                let nx = nx as usize;
+                                let ny = ny as usize;
+                                if self.get_pixel(nx, ny) && !visited[ny * self.width + nx] {
+                                    stack.push((nx, ny));
                                 }
                             }
                         }
