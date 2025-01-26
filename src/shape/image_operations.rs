@@ -119,34 +119,34 @@ impl BinaryImage {
         new_image
     }
 
-    // pub fn dilate(&self) -> BinaryImage {
-    //     let mut result = BinaryImage::new_w_h(self.width, self.height);
+    pub fn dilate(&self) -> BinaryImage {
+        let mut result = BinaryImage::new_w_h(self.width, self.height);
 
-    //     for y in 0..self.height {
-    //         for x in 0..self.width {
-    //             if self.get_pixel(x, y) {
-    //                 // Set the current pixel
-    //                 result.set_pixel(x, y, true);
+        for y in 0..self.height {
+            for x in 0..self.width {
+                if self.get_pixel(x, y) {
+                    // Set the current pixel
+                    result.set_pixel(x, y, true);
 
-    //                 // Set neighboring pixels (8-connected)
-    //                 for i in -1..=1 {
-    //                     for j in -1..=1 {
-    //                         let nx = x as isize + i;
-    //                         let ny = y as isize + j;
-    //                         if nx >= 0 && ny >= 0 && nx < self.width as isize && ny < self.height as isize {
-    //                             result.set_pixel(nx as usize, ny as usize, true);
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
+                    // Set neighboring pixels (8-connected)
+                    for i in -2..=2 {
+                        for j in -2..=2 {
+                            let nx = x as isize + i;
+                            let ny = y as isize + j;
+                            if nx >= 0 && ny >= 0 && nx < self.width as isize && ny < self.height as isize {
+                                result.set_pixel(nx as usize, ny as usize, true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-    //     result
-    // }
+        result
+    }
 
     pub fn remove_disjoint_components(&self) -> BinaryImage {
-        // Find connected components and keep only the largest one
+        // Find connected components using 8-connectivity
         let mut visited = vec![false; self.width * self.height];
         let mut components = Vec::new();
         
@@ -164,15 +164,20 @@ impl BinaryImage {
                         visited[idx] = true;
                         component.push((cx, cy));
                         
-                        // Check 4-connected neighbors only (no diagonals)
-                        for (dx, dy) in [(0, 1), (1, 0), (0, -1), (-1, 0)] {
-                            let nx = cx as i32 + dx;
-                            let ny = cy as i32 + dy;
-                            if nx >= 0 && ny >= 0 && nx < self.width as i32 && ny < self.height as i32 {
-                                let nx = nx as usize;
-                                let ny = ny as usize;
-                                if self.get_pixel(nx, ny) && !visited[ny * self.width + nx] {
-                                    stack.push((nx, ny));
+                        // Check 8-connected neighbors (including diagonals)
+                        for dy in -1..=1 {
+                            for dx in -1..=1 {
+                                if dx == 0 && dy == 0 {
+                                    continue;
+                                }
+                                let nx = cx as i32 + dx;
+                                let ny = cy as i32 + dy;
+                                if nx >= 0 && ny >= 0 && nx < self.width as i32 && ny < self.height as i32 {
+                                    let nx = nx as usize;
+                                    let ny = ny as usize;
+                                    if self.get_pixel(nx, ny) && !visited[ny * self.width + nx] {
+                                        stack.push((nx, ny));
+                                    }
                                 }
                             }
                         }
@@ -182,23 +187,26 @@ impl BinaryImage {
             }
         }
 
-        if components.len() > 1 {
-            println!("Found disjoint seg with {} components! The size of each component is: {:?}", components.len(), components.iter().map(|c| c.len()).collect::<Vec<_>>());
-
-            // Find largest component
-            let largest = components.iter()
-                .max_by_key(|c| c.len())
-                .unwrap();
-                
-            // Clear image and redraw only largest component
-            let mut image = BinaryImage::new_w_h(self.width, self.height);
-            for &(x, y) in largest {
-                image.set_pixel(x, y, true);
-            }
-            return image
-        } else {
-            return self.clone()
+        // Find largest component
+        let largest = components.iter()
+            .max_by_key(|c| c.len())
+            .unwrap();
+            
+        // Create new image with only the largest component
+        let mut image = BinaryImage::new_w_h(self.width, self.height);
+        for &(x, y) in largest {
+            image.set_pixel(x, y, true);
         }
+
+        // Fix any remaining diagonal connections
+        let mut fixed_image = image.fix_diagonal_cc();
+        
+        // Recursively remove any new disjoint components that may have been created
+        if components.len() > 1 {
+            fixed_image = fixed_image.remove_disjoint_components();
+        }
+
+        fixed_image
     }
 
     pub fn fix_diagonal_cc(&self) -> BinaryImage {

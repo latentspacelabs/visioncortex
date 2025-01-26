@@ -41,6 +41,7 @@ impl Cluster {
                 true,
             );
         }
+        image = image.dilate();
         image = image.fix_diagonal_cc();
         image = image.remove_disjoint_components();
         
