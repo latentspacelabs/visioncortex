@@ -360,8 +360,10 @@ impl SegImage {
         for y in 0..self.height {
             for x in 0..self.width {
                 let pos = PointI32 { x: x as i32, y: y as i32 };
-                let seg_id= self.get_pixel(x as usize, y as usize) as usize;
-                clusters[seg_id].add(pos);
+                let seg_id = self.get_pixel(x as usize, y as usize) as usize;
+                if self.unique_ids.contains(&(seg_id as SegId)) {
+                    clusters[seg_id].add(pos);
+                }
                 rect.add_x_y(x as i32, y as i32);
             }
         }
